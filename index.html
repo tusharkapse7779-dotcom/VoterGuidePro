@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Election Assistant</title>
+
+<link rel="stylesheet" href="css/styles.css">
+
+<!-- Premium Font -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
+
+</head>
+<body>
+
+<div class="container">
+
+    <div class="header">
+        🗳️ Election Assistant  
+        <small>Smart guide for voters</small>
+    </div>
+
+    <div id="chatContainer" class="chat-container">
+        <div class="message bot">
+            <div class="message-content">
+                Hi 👋 Type <b>start</b> or <b>timeline</b>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Buttons -->
+    <div class="quick-buttons">
+        <button onclick="quick('start')">Start</button>
+        <button onclick="quick('timeline')">Timeline</button>
+    </div>
+
+    <div class="input-container">
+        <input type="text" id="userInput" placeholder="Ask something...">
+        <button id="sendBtn">Send</button>
+    </div>
+
+</div>
+
+<script src="js/script.js"></script>
+
+</body>
+</html>
