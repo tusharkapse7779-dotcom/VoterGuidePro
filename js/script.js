@@ -3,33 +3,56 @@ const input = document.getElementById("userInput");
 const btn = document.getElementById("sendBtn");
 
 let currentStep = 0;
+let lastIntent = "";
 
-// 📊 Analytics (stored locally)
+// 📊 Analytics
 let analytics = {
-    opens: localStorage.getItem("opens") || 0,
-    messages: localStorage.getItem("messages") || 0,
+    opens: parseInt(localStorage.getItem("opens") || "0"),
+    messages: parseInt(localStorage.getItem("messages") || "0"),
 };
-
 analytics.opens++;
 localStorage.setItem("opens", analytics.opens);
 
-// 🇮🇳 Election Steps
+// 🌐 Language Detection (basic)
+function detectLanguage(text) {
+    if (/[अ-ह]/.test(text)) return "hi";
+    if (/[अ-ज्ञ]/.test(text)) return "mr";
+    return "en";
+}
+
+// 🌍 Location (Google-level feature)
+function getUserLocation() {
+    return new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                resolve({
+                    lat: pos.coords.latitude,
+                    lng: pos.coords.longitude
+                });
+            },
+            () => reject("Location denied")
+        );
+    });
+}
+
+// 🗳️ Election Steps
 const steps = [
-    { title: "1️⃣ Registration", text: "Register via NVSP portal with ID & address proof." },
-    { title: "2️⃣ Voter ID (EPIC)", text: "Get your voter ID card after approval." },
-    { title: "3️⃣ Nomination", text: "Candidates file nominations under ECI rules." },
-    { title: "4️⃣ Campaign", text: "Political campaigns begin with code of conduct." },
-    { title: "5️⃣ Voting Day", text: "Vote using EVM at your polling booth." },
-    { title: "6️⃣ Counting", text: "Votes counted with EVM + VVPAT." },
-    { title: "7️⃣ Results", text: "Winner announced officially." }
+    "Registration",
+    "Voter ID (EPIC)",
+    "Nomination",
+    "Campaign",
+    "Voting Day",
+    "Counting",
+    "Results"
 ];
 
-// EVENTS
+// UI EVENTS
 btn.onclick = sendMessage;
-input.addEventListener("keypress", (e) => {
+input.addEventListener("keypress", e => {
     if (e.key === "Enter") sendMessage();
 });
 
+// SEND MESSAGE
 function sendMessage() {
     let msg = input.value.trim();
     if (!msg) return;
@@ -42,13 +65,14 @@ function sendMessage() {
 
     addMessage("Typing...", "bot");
 
-    setTimeout(() => {
+    setTimeout(async () => {
         removeLastMessage();
-        addMessage(generateResponse(msg.toLowerCase()), "bot");
-    }, 700);
+        let res = await generateResponse(msg);
+        addMessage(res, "bot");
+    }, 600);
 }
 
-// UI FUNCTIONS
+// UI
 function addMessage(text, type) {
     let div = document.createElement("div");
     div.className = "message " + type;
@@ -66,75 +90,108 @@ function removeLastMessage() {
     chatContainer.removeChild(chatContainer.lastChild);
 }
 
-function quick(text) {
-    input.value = text;
-    sendMessage();
+// 🧠 INTENT DETECTION
+function detectIntent(msg) {
+    if (msg.includes("start")) return "start";
+    if (msg.includes("next")) return "next";
+    if (msg.includes("timeline")) return "timeline";
+    if (msg.includes("booth") || msg.includes("location")) return "booth";
+    if (msg.includes("register")) return "register";
+    if (msg.includes("vote")) return "vote";
+    if (msg.includes("analytics")) return "analytics";
+    return "ai";
 }
 
-// 🌍 GOOGLE MAPS BOOTH LINK
-function getMapLink() {
-    return `https://www.google.com/maps/search/polling+booth+near+me`;
+// 📅 Dynamic Phase
+function getPhase() {
+    const m = new Date().getMonth();
+    return ["Registration","Nomination","Campaign","Voting","Counting","Results"][Math.floor(m/2)];
 }
 
-// 🤖 AI RESPONSE (SIMULATED STRUCTURE)
-function aiResponse(query) {
+// 🤖 (Gemini-ready placeholder)
+async function aiResponse(query) {
     return `
-    🤖 <b>AI Assistant:</b><br>
-    ${query} is part of the election process. Please follow official ECI guidelines.<br>
+    🤖 <b>AI Insight</b><br>
+    "${query}" is related to election awareness.<br><br>
+    📍 Current Phase: <b>${getPhase()}</b><br>
+    💡 Ask: start / timeline / vote / booth
     `;
 }
 
-// CORE LOGIC
-function generateResponse(msg) {
+// CORE ENGINE
+async function generateResponse(msgRaw) {
+    const msg = msgRaw.toLowerCase();
+    const intent = detectIntent(msg);
+    lastIntent = intent;
 
-    if (msg.includes("start")) {
+    // START
+    if (intent === "start") {
         currentStep = 0;
         return `
-        🇮🇳 <b>Election Process (India)</b><br><br>
-        ${steps.map(s => `<br>${s.title}`).join("")}
-        <br><br>Type <b>next</b> to continue
+        🇮🇳 <b>Election Process</b><br><br>
+        ${steps.map((s,i)=>`${i+1}. ${s}`).join("<br>")}
+        <br><br>👉 Type <b>next</b>
         `;
     }
 
-    if (msg.includes("next")) {
+    // NEXT
+    if (intent === "next") {
         if (currentStep < steps.length) {
-            let s = steps[currentStep++];
-            return `<b>${s.title}</b><br>${s.text}`;
+            return `📍 Step ${currentStep+1}: <b>${steps[currentStep++]}</b>`;
         }
-        return "✅ Completed all steps!";
+        return "✅ Process completed!";
     }
 
-    if (msg.includes("booth") || msg.includes("location")) {
+    // TIMELINE
+    if (intent === "timeline") {
         return `
-        📍 <b>Find Polling Booth:</b><br>
-        <a href="${getMapLink()}" target="_blank">Open in Google Maps</a>
+        📅 <b>Timeline</b><br><br>
+        ${steps.join(" → ")}<br><br>
+        📍 Current Phase: <b>${getPhase()}</b>
         `;
     }
 
-    if (msg.includes("register")) {
+    // BOOTH (REAL FEATURE 🔥)
+    if (intent === "booth") {
+        try {
+            const loc = await getUserLocation();
+            return `
+            📍 <b>Nearby Booth</b><br>
+            <a href="https://www.google.com/maps?q=${loc.lat},${loc.lng}" target="_blank">
+            Open in Google Maps
+            </a>
+            `;
+        } catch {
+            return "⚠️ Location permission denied.";
+        }
+    }
+
+    // REGISTER
+    if (intent === "register") {
         return `
-        🧾 <b>Register Here:</b><br>
+        🧾 Register here:<br>
         https://nvsp.in
         `;
     }
 
-    if (msg.includes("vote")) {
+    // VOTE
+    if (intent === "vote") {
         return `
-        🗳️ <b>How to Vote:</b><br>
-        - Carry voter ID<br>
-        - Go to polling booth<br>
-        - Use EVM machine<br>
+        🗳️ Voting Steps:<br>
+        - Carry ID<br>
+        - Go to booth<br>
+        - Use EVM
         `;
     }
 
-    if (msg.includes("analytics")) {
+    // ANALYTICS
+    if (intent === "analytics") {
         return `
-        📊 <b>App Analytics:</b><br>
-        Opens: ${analytics.opens}<br>
-        Messages: ${analytics.messages}
+        📊 Opens: ${analytics.opens}<br>
+        💬 Messages: ${analytics.messages}
         `;
     }
 
-    // fallback AI
-    return aiResponse(msg);
+    // SMART AI
+    return await aiResponse(msg);
 }
