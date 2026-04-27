@@ -1,65 +1,103 @@
-const chatContainer = document.getElementById("chatContainer");
+const chat = document.getElementById("chatContainer");
 const input = document.getElementById("userInput");
 const btn = document.getElementById("sendBtn");
 
-// SEND MESSAGE
+// Analytics
+let opens = localStorage.getItem("opens") || 0;
+let messages = localStorage.getItem("messages") || 0;
+opens++;
+localStorage.setItem("opens", opens);
+
+// EVENTS
 btn.onclick = sendMessage;
 input.addEventListener("keypress", e => {
-    if (e.key === "Enter") sendMessage();
+  if (e.key === "Enter") sendMessage();
 });
 
+function quick(text) {
+  input.value = text;
+  sendMessage();
+}
+
+// SEND MESSAGE
 function sendMessage() {
-    const msg = input.value.trim();
-    if (!msg) return;
+  const msg = input.value.trim();
+  if (!msg) return;
 
-    addMessage(msg, "user");
-    input.value = "";
+  messages++;
+  localStorage.setItem("messages", messages);
 
-    addMessage("Thinking...", "bot");
+  addMessage(msg, "user");
+  input.value = "";
 
-    getGeminiResponse(msg);
+  addMessage("⏳ Thinking...", "bot");
+
+  fetchAI(msg);
 }
 
 // UI
 function addMessage(text, type) {
-    const div = document.createElement("div");
-    div.className = "message " + type;
+  const div = document.createElement("div");
+  div.className = "message " + type;
 
-    const content = document.createElement("div");
-    content.className = "message-content";
-    content.innerHTML = text;
+  const content = document.createElement("div");
+  content.innerHTML = text;
 
-    div.appendChild(content);
-    chatContainer.appendChild(div);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
+  div.appendChild(content);
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
 }
 
-// CALL BACKEND (SECURE)
-async function getGeminiResponse(message) {
-    try {
-        const res = await fetch("/api/gemini", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ message })
-        });
+// AI CALL
+async function fetchAI(message) {
+  try {
+    const res = await fetch("/api/gemini", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ message })
+    });
 
-        const data = await res.json();
+    const data = await res.json();
 
-        // remove "Thinking..."
-        chatContainer.removeChild(chatContainer.lastChild);
+    chat.removeChild(chat.lastChild);
+    addMessage(data.reply, "bot");
 
-        addMessage(data.reply, "bot");
-
-    } catch (err) {
-        chatContainer.removeChild(chatContainer.lastChild);
-        addMessage("⚠️ Error connecting to AI", "bot");
-    }
+  } catch {
+    chat.removeChild(chat.lastChild);
+    addMessage("⚠️ AI Error", "bot");
+  }
 }
 
-// QUICK BUTTONS
-function quick(text) {
-    input.value = text;
+// 🎙 Voice
+function startVoice() {
+  const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  recognition.lang = "en-IN";
+
+  recognition.onresult = function(event) {
+    input.value = event.results[0][0].transcript;
     sendMessage();
+  };
+
+  recognition.start();
+}
+
+// 📍 Booth Finder
+function findBooth() {
+  navigator.geolocation.getCurrentPosition(pos => {
+    const { latitude, longitude } = pos.coords;
+    window.open(`https://www.google.com/maps?q=polling+booth+near+${latitude},${longitude}`);
+  }, () => {
+    addMessage("⚠️ Location permission denied", "bot");
+  });
+}
+
+// 📊 Analytics
+function showAnalytics() {
+  addMessage(`
+  📊 <b>Analytics</b><br><br>
+  Opens: ${opens}<br>
+  Messages: ${messages}
+  `, "bot");
 }
