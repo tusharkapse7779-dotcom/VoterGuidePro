@@ -1,6 +1,138 @@
 :root {
-    --glass-bg: rgba(255, 255, 255, 0.1);
-    --glass-border: rgba(255, 255, 255, 0.2);
-    --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
-    --primary-gradient: linear-gradient(135deg, #00b4d8 0%, #0077b6 50%, #023e8a 100%);
-    --success-gradient: linear-gradient(135deg, #90be6d 0
+  --bg-dark: #0a0f1c;
+  --glass: rgba(255,255,255,0.05);
+  --border: rgba(255,255,255,0.1);
+  --primary: #00c6ff;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-dark);
+  color: white;
+}
+
+/* Animated Background */
+.bg-animation {
+  position: fixed;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle,#00c6ff33,transparent),
+              radial-gradient(circle,#7c3aed33,transparent);
+  animation: moveBg 10s infinite alternate;
+  z-index: -1;
+}
+
+@keyframes moveBg {
+  100% { transform: translate(-10%, -10%); }
+}
+
+/* Header */
+header {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px;
+}
+
+/* Cards */
+.card {
+  background: var(--glass);
+  backdrop-filter: blur(15px);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 20px;
+  margin: 20px;
+  transition: 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 0 40px var(--primary);
+}
+
+/* Map */
+#map {
+  height: 300px;
+  border-radius: 10px;
+}
+
+/* Buttons */
+button {
+  padding: 10px;
+  border: none;
+  background: var(--primary);
+  color: white;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+button:hover { transform: scale(1.05); }
+button:active { transform: scale(0.95); }
+
+/* Ripple */
+.ripple {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  background: white;
+  border-radius: 50%;
+  transform: scale(0);
+  animation: ripple 0.6s linear;
+}
+
+@keyframes ripple {
+  to { transform: scale(4); opacity: 0; }
+}
+
+/* Chatbot */
+#chatbot-toggle {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--primary);
+  padding: 15px;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  70% { box-shadow: 0 0 0 20px transparent; }
+}
+
+#chatbot-box {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  width: 300px;
+  height: 400px;
+  background: #111;
+  display: none;
+  flex-direction: column;
+}
+
+.chat-header {
+  background: var(--primary);
+  padding: 10px;
+}
+
+#chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.chat-input {
+  display: flex;
+}
+
+/* Scroll Animation */
+.hidden {
+  opacity: 0;
+  transform: translateY(30px);
+}
+.show {
+  opacity: 1;
+  transform: translateY(0);
+  transition: 0.8s;
+}
