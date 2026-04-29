@@ -1,95 +1,50 @@
-/* CHART */
-window.onload = () => {
+// Initialize Map
+let map = L.map('map').setView([19.8762, 75.3433], 12);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+L.marker([19.8762, 75.3433]).addTo(map).bindPopup("Chhatrapati Sambhajinagar");
 
-  new Chart(document.getElementById('resultsChart'), {
+// Initialize Chart
+const ctx = document.getElementById('resultsChart').getContext('2d');
+const resultsChart = new Chart(ctx, {
     type: 'doughnut',
     data: {
-      labels: ['NDA','INDIA','Others'],
-      datasets: [{
-        data: [293,234,16],
-        backgroundColor: ['#00c6ff','#7c3aed','#00ff9f']
-      }]
+        labels: ['NDA', 'INDIA', 'Others'],
+        datasets: [{
+            data: [293, 234, 16], // Verified 2024 Data
+            backgroundColor: ['#00c6ff', '#7c3aed', '#00ff9f'],
+            borderWidth: 0
+        }]
     },
-    options: {
-      cutout: "70%"
-    },
-    plugins: [{
-      id: 'centerText',
-      beforeDraw(chart) {
-        const ctx = chart.ctx;
-        ctx.font = "20px Arial";
-        ctx.fillStyle = "white";
-        ctx.textAlign = "center";
-        ctx.fillText("543 Seats", chart.width/2, chart.height/2);
-      }
-    }]
-  });
+    options: { cutout: '72%', plugins: { legend: { labels: { color: '#fff' } } } }
+});
 
-  initMap();
-};
-
-/* MAP */
-let map;
-function initMap(){
-  map = L.map('map').setView([19.8762,75.3433],10);
-
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
-  .addTo(map);
+// History & Demo Logic
+function updateDemoData() {
+    const newData = [280, 240, 23];
+    resultsChart.data.datasets[0].data = newData;
+    resultsChart.update();
+    addHistory("Data Updated", "Chart data refreshed with demo values.");
 }
 
-function getLocation(){
-  navigator.geolocation.getCurrentPosition(pos=>{
-    const lat = pos.coords.latitude;
-    const lon = pos.coords.longitude;
-
-    map.setView([lat,lon],13);
-    L.marker([lat,lon]).addTo(map)
-      .bindPopup("You are here").openPopup();
-  });
+function addHistory(title, detail) {
+    const historyList = document.getElementById('history-list');
+    const entry = document.createElement('div');
+    entry.style.fontSize = '0.7rem';
+    entry.style.margin = '5px 0';
+    entry.innerHTML = `<b>${new Date().toLocaleTimeString()}</b>: ${title}`;
+    historyList.prepend(entry);
+    
+    // Save to LocalStorage
+    let logs = JSON.parse(localStorage.getItem('logs') || '[]');
+    logs.push({title, detail, time: new Date()});
+    localStorage.setItem('logs', JSON.stringify(logs));
 }
 
-/* CHAT */
-function sendMessage(){
-  const input = document.getElementById("user-input");
-  const msg = input.value;
-  if(!msg) return;
-
-  addMsg("You",msg);
-  setTimeout(()=>addMsg("Bot",botReply(msg.toLowerCase())),500);
-  input.value="";
-}
-
-function addMsg(s,m){
-  const div=document.createElement("div");
-  div.innerHTML=`<b>${s}:</b> ${m}`;
-  document.getElementById("chat-messages").appendChild(div);
-}
-
-function quickAsk(type){
-  if(type==="vote") sendAuto("How to vote");
-  if(type==="evm") sendAuto("EVM");
-  if(type==="helpline") sendAuto("Helpline");
-}
-
-function sendAuto(msg){
-  document.getElementById("user-input").value = msg;
-  sendMessage();
-}
-
-function botReply(m){
-  if(m.includes("vote")) return "Go to booth → Verify ID → Press EVM.";
-  if(m.includes("evm")) return "EVM is electronic voting machine.";
-  if(m.includes("helpline")) return "Call 1950.";
-  return "Ask about voting or results.";
-}
-
-/* VOICE */
-function startVoice(){
-  const rec = new webkitSpeechRecognition();
-  rec.onresult = e=>{
-    document.getElementById("user-input").value =
-      e.results[0][0].transcript;
-    sendMessage();
-  };
-  rec.start();
+function sendMessage() {
+    const input = document.getElementById('user-input');
+    if(!input.value) return;
+    const chat = document.getElementById('chat-box');
+    chat.innerHTML += `<p style="color:var(--primary)"><b>You:</b> ${input.value}</p>`;
+    addHistory("AI Query", input.value);
+    input.value = '';
 }
