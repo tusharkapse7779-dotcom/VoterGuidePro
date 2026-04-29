@@ -1,50 +1,70 @@
-// Initialize Map
-let map = L.map('map').setView([19.8762, 75.3433], 12);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-L.marker([19.8762, 75.3433]).addTo(map).bindPopup("Chhatrapati Sambhajinagar");
-
-// Initialize Chart
-const ctx = document.getElementById('resultsChart').getContext('2d');
-const resultsChart = new Chart(ctx, {
+// --- 1. INITIALIZE CHART ---
+const ctx = document.getElementById('mainChart').getContext('2d');
+const mainChart = new Chart(ctx, {
     type: 'doughnut',
     data: {
         labels: ['NDA', 'INDIA', 'Others'],
         datasets: [{
-            data: [293, 234, 16], // Verified 2024 Data
-            backgroundColor: ['#00c6ff', '#7c3aed', '#00ff9f'],
+            data: [293, 234, 16],
+            backgroundColor: ['#00d2ff', '#7c3aed', '#00ff9f'],
             borderWidth: 0
         }]
     },
-    options: { cutout: '72%', plugins: { legend: { labels: { color: '#fff' } } } }
+    options: { cutout: '78%', plugins: { legend: { position: 'bottom', labels: { color: '#fff' } } } }
 });
 
-// History & Demo Logic
-function updateDemoData() {
-    const newData = [280, 240, 23];
-    resultsChart.data.datasets[0].data = newData;
-    resultsChart.update();
-    addHistory("Data Updated", "Chart data refreshed with demo values.");
+// --- 2. EVM VOTE & BEEP LOGIC ---
+function castVote(id, party) {
+    const lamp = document.getElementById(`lp${id}`);
+    lamp.classList.add('active');
+
+    // Web Audio Beep
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+    osc.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 1); // 1-second EVM beep
+
+    setTimeout(() => {
+        lamp.classList.remove('active');
+        addLog(`Vote cast for ${party}`);
+    }, 1200);
 }
 
-function addHistory(title, detail) {
-    const historyList = document.getElementById('history-list');
-    const entry = document.createElement('div');
-    entry.style.fontSize = '0.7rem';
-    entry.style.margin = '5px 0';
-    entry.innerHTML = `<b>${new Date().toLocaleTimeString()}</b>: ${title}`;
-    historyList.prepend(entry);
+// --- 3. VOICE REPORTING ---
+function triggerVoiceReport() {
+    const btn = document.getElementById('mic');
+    btn.classList.add('active');
+    document.getElementById('mic-status').innerText = "Generating Speech...";
+
+    const report = new SpeechSynthesisUtterance();
+    report.text = "Hello. This is your Election Guide Intelligence report. NDA is currently leading in 293 seats, while the INDIA alliance is at 234 seats. Total turnout is 96.8 percent across all states.";
     
-    // Save to LocalStorage
-    let logs = JSON.parse(localStorage.getItem('logs') || '[]');
-    logs.push({title, detail, time: new Date()});
-    localStorage.setItem('logs', JSON.stringify(logs));
+    report.onend = () => {
+        btn.classList.remove('active');
+        document.getElementById('mic-status').innerText = "Report Complete.";
+        addLog("Voice report played.");
+    };
+    window.speechSynthesis.speak(report);
 }
 
-function sendMessage() {
-    const input = document.getElementById('user-input');
-    if(!input.value) return;
-    const chat = document.getElementById('chat-box');
-    chat.innerHTML += `<p style="color:var(--primary)"><b>You:</b> ${input.value}</p>`;
-    addHistory("AI Query", input.value);
-    input.value = '';
+// --- 4. MAP & LOGGING ---
+const map = L.map('map').setView([19.8762, 75.3433], 12);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+L.marker([19.8762, 75.3433]).addTo(map).bindPopup("Current Booth Region");
+
+function addLog(msg) {
+    const feed = document.getElementById('log-feed');
+    feed.innerHTML = `<div>[${new Date().toLocaleTimeString()}] ${msg}</div>` + feed.innerHTML;
+}
+
+function showDemo(title, detail) {
+    alert(`${title}: ${detail}`);
+    addLog(`Consulted ${title}`);
+}
+
+function switchView(view) {
+    addLog(`Switched to ${view} view.`);
 }
