@@ -1,102 +1,27 @@
-:root {
-    --bg: #050a18;
-    --sidebar: #080c16;
-    --glass: rgba(255, 255, 255, 0.05);
-    --primary: #00d2ff;
-    --accent: #7c3aed;
-    --success: #00ff9f;
-    --danger: #ff4b2b;
-    --border: rgba(255, 255, 255, 0.1);
-}
+<!DOCTYPE html>
+<html>
+<head>
+<title>Election Guide</title>
 
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
+<link rel="stylesheet" href="css/styles.css">
 
-body { 
-    background: var(--bg); 
-    color: white; 
-    display: flex; 
-    height: 100vh; 
-    overflow: hidden; 
-}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
 
-/* Sidebar Styling */
-.sidebar { 
-    width: 260px; 
-    background: var(--sidebar); 
-    border-right: 1px solid var(--border); 
-    padding: 25px; 
-    display: flex; 
-    flex-direction: column; 
-    z-index: 10; 
-}
+<body>
 
-.logo-container { 
-    display: flex; 
-    align-items: center; 
-    gap: 10px; 
-    margin-bottom: 25px; 
-}
+<h1>Election Guide Pro</h1>
 
-.flag-icon { 
-    width: 25px; 
-    height: 15px; 
-    background: linear-gradient(#f93 33%,#fff 33%,#fff 66%,#138808 66%); 
-    border: 1px solid #ddd; 
-}
+<canvas id="mainChart"></canvas>
 
-.nav-item { 
-    padding: 12px 15px; 
-    margin: 5px 0; 
-    border-radius: 10px; 
-    cursor: pointer; 
-    color: #888; 
-    transition: 0.3s; 
-    display: flex; 
-    align-items: center; 
-    gap: 10px; 
-}
+<button onclick="castVote(1,'Alpha')">Vote Alpha</button>
+<button onclick="triggerVoiceReport()">Voice</button>
 
-.nav-item.active, .nav-item:hover { 
-    background: var(--glass); 
-    color: var(--primary); 
-}
+<div id="map"></div>
 
-/* Dashboard Elements */
-.main { flex: 1; padding: 25px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+<script type="module" src="js/app.js"></script>
 
-.card { 
-    background: var(--glass); 
-    border: 1px solid var(--border); 
-    border-radius: 20px; 
-    padding: 20px; 
-    backdrop-filter: blur(15px); 
-}
-
-.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
-.stat-val { font-size: 1.8rem; font-weight: bold; margin-bottom: 5px; display: block; }
-.stat-label { font-size: 0.75rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
-
-.border-accent { border-bottom: 3px solid var(--accent); }
-.border-success { border-bottom: 3px solid var(--success); }
-
-.content-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; }
-
-/* EVM Unit */
-.evm-container { background: #d1d5db; border: 8px solid #94a3b8; border-radius: 12px; padding: 20px; color: #1e293b; }
-.ballot-row { display: flex; align-items: center; justify-content: space-between; background: white; padding: 10px; margin-bottom: 6px; border: 1px solid #94a3b8; border-radius: 4px; }
-.btn-vote { width: 45px; height: 45px; background: #2563eb; border: 3px solid #1e3a8a; border-radius: 4px; cursor: pointer; box-shadow: 2px 2px 0 #000; }
-.lamp { width: 15px; height: 15px; background: #334155; border-radius: 50%; }
-.lamp.active { background: #ff0000; box-shadow: 0 0 10px #ff0000; }
-
-/* Voice Animation */
-.mic-btn { width: 65px; height: 65px; border-radius: 50%; border: none; background: var(--primary); color: #000; cursor: pointer; font-size: 1.5rem; transition: 0.4s; display: block; margin: 0 auto; }
-.mic-btn.active { animation: pulse 1.2s infinite; box-shadow: 0 0 20px var(--primary); }
-
-@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
-
-/* Helpers */
-.centered { text-align: center; }
-#mic-status { margin-top: 10px; font-size: 0.8rem; color: #888; }
-#map { height: 260px; border-radius: 15px; border: 1px solid var(--border); }
-#log-feed { height: 120px; overflow-y: auto; font-size: 0.75rem; color: #777; border-top: 1px solid var(--border); padding-top: 10px; }
-.margin-top { margin-top: 20px; }
+</body>
+</html>
