@@ -1,0 +1,6 @@
+:root {
+    --glass-bg: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+    --primary-gradient: linear-gradient(135deg, #00b4d8 0%, #0077b6 50%, #023e8a 100%);
+    --success-gradient: linear-gradient(135deg, #90be6d 0
