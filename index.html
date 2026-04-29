@@ -1,62 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Election Guide Pro</title>
-
-<link rel="stylesheet" href="css/style.css">
-
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<!-- Leaflet Map -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Election Guide Pro</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
-
 <body>
+    <div class="bg-animation"></div>
+    
+    <aside class="sidebar">
+        <div class="logo">🇮🇳 Election Pro</div>
+        <nav>
+            <div class="nav-item active" onclick="switchTab('dashboard')">Dashboard</div>
+            <div class="nav-item" onclick="switchTab('results')">Results</div>
+            <div class="nav-item" onclick="switchTab('timeline')">Timeline</div>
+            <div class="nav-item" onclick="switchTab('evm')">EVM Practice</div>
+        </nav>
+        <div class="history-panel">
+            <h4>History</h4>
+            <div id="history-list"></div>
+        </div>
+    </aside>
 
-<div class="bg-animation"></div>
+    <main class="main-content">
+        <header class="stats-row">
+            <div class="card"><h3>543</h3><p>Total Seats</p></div>
+            <div class="card"><h3>97.2 Cr</h3><p>Total Voters</p></div>
+            <div class="card"><h3>96.8%</h3><p>Voter Turnout</p></div>
+            <div class="card highlight"><h3>293</h3><p>NDA Leads</p></div>
+        </header>
 
-<header class="fade-in">
-  <h1>🇮🇳 Election Guide Pro</h1>
-  <button onclick="toggleTheme()">🌙</button>
-</header>
+        <section class="grid-container">
+            <div class="card span-1">
+                <h4>Results Overview</h4>
+                <canvas id="resultsChart"></canvas>
+                <button class="btn-demo" onclick="updateDemoData()">Update Data</button>
+            </div>
+            <div class="card span-1">
+                <h4>Live Location</h4>
+                <div id="map"></div>
+            </div>
+            <div class="card span-2 chat-card">
+                <h4>AI Assistant</h4>
+                <div id="chat-box"></div>
+                <div class="chat-input-area">
+                    <input type="text" id="user-input" placeholder="Ask about elections...">
+                    <button onclick="sendMessage()">Send</button>
+                </div>
+            </div>
+        </section>
+    </main>
 
-<section class="dashboard">
-
-<div class="card fade-in">
-  <h2>📊 Results</h2>
-  <canvas id="resultsChart"></canvas>
-</div>
-
-<div class="card fade-in">
-  <h2>📍 Live Location</h2>
-  <div id="map"></div>
-  <button onclick="getLocation()">Get My Location</button>
-</div>
-
-</section>
-
-<!-- Chatbot -->
-<div id="chatbot-toggle">💬</div>
-
-<div id="chatbot-box">
-  <div class="chat-header">
-    AI Assistant
-    <span id="close-chat">✖</span>
-  </div>
-
-  <div id="chat-messages"></div>
-
-  <div class="chat-input">
-    <input id="user-input" placeholder="Ask or speak..." />
-    <button onclick="startVoice()">🎤</button>
-    <button onclick="sendMessage()">Send</button>
-  </div>
-</div>
-
-<script src="js/script.js"></script>
+    <script src="js/script.js"></script>
 </body>
 </html>
