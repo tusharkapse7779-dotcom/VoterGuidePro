@@ -1,5 +1,6 @@
-/* Chart */
+/* CHART */
 window.onload = () => {
+
   new Chart(document.getElementById('resultsChart'), {
     type: 'doughnut',
     data: {
@@ -8,21 +9,36 @@ window.onload = () => {
         data: [293,234,16],
         backgroundColor: ['#00c6ff','#7c3aed','#00ff9f']
       }]
-    }
+    },
+    options: {
+      cutout: "70%"
+    },
+    plugins: [{
+      id: 'centerText',
+      beforeDraw(chart) {
+        const ctx = chart.ctx;
+        ctx.font = "20px Arial";
+        ctx.fillStyle = "white";
+        ctx.textAlign = "center";
+        ctx.fillText("543 Seats", chart.width/2, chart.height/2);
+      }
+    }]
   });
 
   initMap();
 };
 
-/* Map */
+/* MAP */
 let map;
-function initMap() {
+function initMap(){
   map = L.map('map').setView([19.8762,75.3433],10);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
+  .addTo(map);
 }
 
-function getLocation() {
-  navigator.geolocation.getCurrentPosition(pos => {
+function getLocation(){
+  navigator.geolocation.getCurrentPosition(pos=>{
     const lat = pos.coords.latitude;
     const lon = pos.coords.longitude;
 
@@ -32,20 +48,14 @@ function getLocation() {
   });
 }
 
-/* Chatbot */
-document.getElementById("chatbot-toggle").onclick = () =>
-  document.getElementById("chatbot-box").style.display = "flex";
-
-document.getElementById("close-chat").onclick = () =>
-  document.getElementById("chatbot-box").style.display = "none";
-
-function sendMessage() {
+/* CHAT */
+function sendMessage(){
   const input = document.getElementById("user-input");
   const msg = input.value;
   if(!msg) return;
 
-  addMsg("You", msg);
-  setTimeout(() => addMsg("Bot", botReply(msg.toLowerCase())), 500);
+  addMsg("You",msg);
+  setTimeout(()=>addMsg("Bot",botReply(msg.toLowerCase())),500);
   input.value="";
 }
 
@@ -55,39 +65,31 @@ function addMsg(s,m){
   document.getElementById("chat-messages").appendChild(div);
 }
 
+function quickAsk(type){
+  if(type==="vote") sendAuto("How to vote");
+  if(type==="evm") sendAuto("EVM");
+  if(type==="helpline") sendAuto("Helpline");
+}
+
+function sendAuto(msg){
+  document.getElementById("user-input").value = msg;
+  sendMessage();
+}
+
 function botReply(m){
-  if(m.includes("vote")) return "Go to booth → Verify ID → Vote.";
-  if(m.includes("location")) return "Click location button.";
+  if(m.includes("vote")) return "Go to booth → Verify ID → Press EVM.";
+  if(m.includes("evm")) return "EVM is electronic voting machine.";
+  if(m.includes("helpline")) return "Call 1950.";
   return "Ask about voting or results.";
 }
 
-/* Voice */
+/* VOICE */
 function startVoice(){
-  const rec=new webkitSpeechRecognition();
-  rec.onresult=e=>{
-    document.getElementById("user-input").value=e.results[0][0].transcript;
+  const rec = new webkitSpeechRecognition();
+  rec.onresult = e=>{
+    document.getElementById("user-input").value =
+      e.results[0][0].transcript;
     sendMessage();
   };
   rec.start();
 }
-
-/* Ripple */
-document.addEventListener("click",e=>{
-  if(e.target.tagName==="BUTTON"){
-    const r=document.createElement("span");
-    r.classList.add("ripple");
-    e.target.appendChild(r);
-    setTimeout(()=>r.remove(),600);
-  }
-});
-
-/* Scroll Reveal */
-const obs=new IntersectionObserver(entries=>{
-  entries.forEach(e=>{
-    if(e.isIntersecting) e.target.classList.add("show");
-  });
-});
-document.querySelectorAll(".card").forEach(el=>{
-  el.classList.add("hidden");
-  obs.observe(el);
-});
