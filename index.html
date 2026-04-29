@@ -3,58 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Election Guide Pro</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>Election Guide Pro | Master Console</title>
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="bg-animation"></div>
-    
+
     <aside class="sidebar">
-        <div class="logo">🇮🇳 Election Pro</div>
-        <nav>
-            <div class="nav-item active" onclick="switchTab('dashboard')">Dashboard</div>
-            <div class="nav-item" onclick="switchTab('results')">Results</div>
-            <div class="nav-item" onclick="switchTab('timeline')">Timeline</div>
-            <div class="nav-item" onclick="switchTab('evm')">EVM Practice</div>
-        </nav>
-        <div class="history-panel">
-            <h4>History</h4>
-            <div id="history-list"></div>
+        <div class="logo-container">
+            <div class="flag-icon"></div>
+            <h2>Election Pro</h2>
         </div>
+
+        <nav>
+            <div class="nav-item active" onclick="switchView('dash')">📊 Dashboard</div>
+            <div class="nav-item" onclick="switchView('evm')">📟 EVM Demo</div>
+            <div class="nav-item" onclick="switchView('map')">📍 Live Map</div>
+        </nav>
+
+        <div class="side-feature-box">
+            <p class="section-label">QUICK DATA</p>
+            <div class="feature-card" onclick="showDemo('Turnout', '96.8% Voter Participation')">📈 Turnout Stats</div>
+            <div class="feature-card" onclick="showDemo('Security', 'Encrypted EVM Protocol v4.2')">🛡️ Security Logs</div>
+            <div class="feature-card" onclick="showDemo('Phase', 'Phase 7: Counting Active')">📅 Timeline Info</div>
+        </div>
+
+        <div id="log-feed"></div>
     </aside>
 
-    <main class="main-content">
-        <header class="stats-row">
-            <div class="card"><h3>543</h3><p>Total Seats</p></div>
-            <div class="card"><h3>97.2 Cr</h3><p>Total Voters</p></div>
-            <div class="card"><h3>96.8%</h3><p>Voter Turnout</p></div>
-            <div class="card highlight"><h3>293</h3><p>NDA Leads</p></div>
-        </header>
+    <main class="main">
+        <section class="stats-grid">
+            <div class="card"><span class="stat-val">543</span><span class="stat-label">Seats</span></div>
+            <div class="card"><span class="stat-val">97.2Cr</span><span class="stat-label">Voters</span></div>
+            <div class="card border-accent"><span class="stat-val">293</span><span class="stat-label">NDA Leads</span></div>
+            <div class="card border-success"><span class="stat-val">234</span><span class="stat-label">INDIA Leads</span></div>
+        </section>
 
-        <section class="grid-container">
-            <div class="card span-1">
-                <h4>Results Overview</h4>
-                <canvas id="resultsChart"></canvas>
-                <button class="btn-demo" onclick="updateDemoData()">Update Data</button>
+        <section class="content-grid">
+            <div class="left-pane">
+                <div class="card centered">
+                    <h4>Live Voice Intelligence</h4>
+                    <button id="mic" class="mic-btn" onclick="triggerVoiceReport()">🎤</button>
+                    <p id="mic-status">Click to play AI Election summary</p>
+                </div>
+                
+                <div class="card">
+                    <h4>Seat Share Visualization</h4>
+                    <canvas id="mainChart" height="150"></canvas>
+                </div>
             </div>
-            <div class="card span-1">
-                <h4>Live Location</h4>
-                <div id="map"></div>
-            </div>
-            <div class="card span-2 chat-card">
-                <h4>AI Assistant</h4>
-                <div id="chat-box"></div>
-                <div class="chat-input-area">
-                    <input type="text" id="user-input" placeholder="Ask about elections...">
-                    <button onclick="sendMessage()">Send</button>
+
+            <div class="right-pane">
+                <div class="card evm-container">
+                    <h3 class="evm-header">VIRTUAL EVM UNIT</h3>
+                    <div class="ballot-row">
+                        <span>PARTY ALPHA</span>
+                        <div id="lp1" class="lamp"></div>
+                        <button class="btn-vote" onclick="castVote(1, 'Alpha')"></button>
+                    </div>
+                    <div class="ballot-row">
+                        <span>PARTY BETA</span>
+                        <div id="lp2" class="lamp"></div>
+                        <button class="btn-vote" onclick="castVote(2, 'Beta')"></button>
+                    </div>
+                    <div class="ballot-row">
+                        <span>PARTY GAMMA</span>
+                        <div id="lp3" class="lamp"></div>
+                        <button class="btn-vote" onclick="castVote(3, 'Gamma')"></button>
+                    </div>
+                </div>
+
+                <div class="card margin-top">
+                    <h4>Booth Location Tracker</h4>
+                    <div id="map"></div>
                 </div>
             </div>
         </section>
     </main>
 
-    <script src="js/script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
