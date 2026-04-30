@@ -1,27 +1,212 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Election Guide</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Election Guide Pro | Master Console</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<link rel="stylesheet" href="css/styles.css">
+    <style>
+        :root {
+            --bg: #050a18;
+            --sidebar: #080c16;
+            --glass: rgba(255, 255, 255, 0.05);
+            --primary: #00d2ff;
+            --accent: #7c3aed;
+            --success: #00ff9f;
+            --danger: #ff4b2b;
+            --border: rgba(255, 255, 255, 0.1);
+        }
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
+        body { background: var(--bg); color: white; display: flex; height: 100vh; overflow: hidden; }
+
+        /* Sidebar & Navigation */
+        .sidebar { width: 260px; background: var(--sidebar); border-right: 1px solid var(--border); padding: 25px; display: flex; flex-direction: column; z-index: 10; }
+        .nav-item { padding: 12px 15px; margin: 5px 0; border-radius: 10px; cursor: pointer; color: #888; transition: 0.3s; display: flex; align-items: center; gap: 10px; }
+        .nav-item.active, .nav-item:hover { background: var(--glass); color: var(--primary); }
+        
+        .side-feature-box { flex: 1; margin-top: 20px; overflow-y: auto; padding-right: 5px; }
+        .feature-card { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border); cursor: pointer; font-size: 0.85rem; }
+        .feature-card:hover { border-color: var(--primary); }
+
+        /* Main Content */
+        .main { flex: 1; padding: 25px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+        .card { background: var(--glass); border: 1px solid var(--border); border-radius: 20px; padding: 20px; backdrop-filter: blur(15px); }
+
+        /* Dashboard Components */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+        .stat-val { font-size: 1.8rem; font-weight: bold; margin-bottom: 5px; display: block; }
+        .stat-label { font-size: 0.75rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
+
+        .content-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; }
+
+        /* EVM Mockup */
+        .evm-container { background: #d1d5db; border: 8px solid #94a3b8; border-radius: 12px; padding: 20px; color: #1e293b; }
+        .ballot-row { display: flex; align-items: center; justify-content: space-between; background: white; padding: 10px; margin-bottom: 6px; border: 1px solid #94a3b8; border-radius: 4px; }
+        .btn-vote { width: 45px; height: 45px; background: #2563eb; border: 3px solid #1e3a8a; border-radius: 4px; cursor: pointer; box-shadow: 2px 2px 0 #000; }
+        .lamp { width: 15px; height: 15px; background: #334155; border-radius: 50%; }
+        .lamp.active { background: #ff0000; box-shadow: 0 0 10px #ff0000; }
+
+        /* Voice Controls */
+        .mic-btn { width: 65px; height: 65px; border-radius: 50%; border: none; background: var(--primary); color: #000; cursor: pointer; font-size: 1.5rem; transition: 0.4s; }
+        .mic-btn.active { animation: pulse 1.2s infinite; box-shadow: 0 0 20px var(--primary); }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        #map { height: 260px; border-radius: 15px; border: 1px solid var(--border); }
+        
+        /* History Logger */
+        #log-feed { height: 120px; overflow-y: auto; font-size: 0.75rem; color: #777; border-top: 1px solid var(--border); padding-top: 10px; }
+    </style>
 </head>
-
 <body>
 
-<h1>Election Guide Pro</h1>
+    <aside class="sidebar">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 25px;">
+            <div style="width: 25px; height: 15px; background: linear-gradient(#f93 33%,#fff 33%,#fff 66%,#138808 66%); border: 1px solid #ddd;"></div>
+            <h2 style="font-size: 1.1rem; color: var(--primary);">Election Pro</h2>
+        </div>
 
-<canvas id="mainChart"></canvas>
+        <nav>
+            <div class="nav-item active" onclick="switchView('dash')">📊 Dashboard</div>
+            <div class="nav-item" onclick="switchView('evm')">📟 EVM Demo</div>
+            <div class="nav-item" onclick="switchView('map')">📍 Live Map</div>
+        </nav>
 
-<button onclick="castVote(1,'Alpha')">Vote Alpha</button>
-<button onclick="triggerVoiceReport()">Voice</button>
+        <div class="side-feature-box">
+            <p style="font-size: 0.65rem; color: #555; margin-bottom: 10px; letter-spacing: 1px;">QUICK DATA</p>
+            <div class="feature-card" onclick="showDemo('Turnout', '96.8% Voter Participation')">📈 Turnout Stats</div>
+            <div class="feature-card" onclick="showDemo('Security', 'Encrypted EVM Protocol v4.2')">🛡️ Security Logs</div>
+            <div class="feature-card" onclick="showDemo('Phase', 'Phase 7: Counting Active')">📅 Timeline Info</div>
+        </div>
 
-<div id="map"></div>
+        <div id="log-feed"></div>
+    </aside>
 
-<script type="module" src="js/app.js"></script>
+    <main class="main">
+        <section class="stats-grid">
+            <div class="card"><span class="stat-val">543</span><span class="stat-label">Seats</span></div>
+            <div class="card"><span class="stat-val">97.2Cr</span><span class="stat-label">Voters</span></div>
+            <div class="card" style="border-bottom: 3px solid var(--accent);"><span class="stat-val">293</span><span class="stat-label">NDA Leads</span></div>
+            <div class="card" style="border-bottom: 3px solid var(--success);"><span class="stat-val">234</span><span class="stat-label">INDIA Leads</span></div>
+        </section>
 
+        <section class="content-grid">
+            <div class="left-pane">
+                <div class="card" style="text-align: center; margin-bottom: 20px;">
+                    <h4>Live Voice Intelligence</h4>
+                    <button id="mic" class="mic-btn" onclick="triggerVoiceReport()">🎤</button>
+                    <p id="mic-status" style="margin-top: 10px; font-size: 0.8rem; color: #888;">Click to play AI Election summary</p>
+                </div>
+                
+                <div class="card">
+                    <h4>Seat Share Visualization</h4>
+                    <canvas id="mainChart" height="150"></canvas>
+                </div>
+            </div>
+
+            <div class="right-pane">
+                <div class="card evm-container">
+                    <h3 style="text-align: center; margin-bottom: 15px; font-size: 0.9rem;">VIRTUAL EVM UNIT</h3>
+                    <div class="ballot-row">
+                        <span>PARTY ALPHA</span>
+                        <div id="lp1" class="lamp"></div>
+                        <button class="btn-vote" onclick="castVote(1, 'Alpha')"></button>
+                    </div>
+                    <div class="ballot-row">
+                        <span>PARTY BETA</span>
+                        <div id="lp2" class="lamp"></div>
+                        <button class="btn-vote" onclick="castVote(2, 'Beta')"></button>
+                    </div>
+                    <div class="ballot-row">
+                        <span>PARTY GAMMA</span>
+                        <div id="lp3" class="lamp"></div>
+                        <button class="btn-vote" onclick="castVote(3, 'Gamma')"></button>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 20px;">
+                    <h4>Booth Location Tracker</h4>
+                    <div id="map"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // --- 1. INITIALIZE CHART ---
+        const ctx = document.getElementById('mainChart').getContext('2d');
+        const mainChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['NDA', 'INDIA', 'Others'],
+                datasets: [{
+                    data: [293, 234, 16],
+                    backgroundColor: ['#00d2ff', '#7c3aed', '#00ff9f'],
+                    borderWidth: 0
+                }]
+            },
+            options: { cutout: '78%', plugins: { legend: { position: 'bottom', labels: { color: '#fff' } } } }
+        });
+
+        // --- 2. EVM VOTE & BEEP LOGIC ---
+        function castVote(id, party) {
+            const lamp = document.getElementById(`lp${id}`);
+            lamp.classList.add('active');
+
+            // Web Audio Beep
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+            osc.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 1); // 1-second EVM beep
+
+            setTimeout(() => {
+                lamp.classList.remove('active');
+                addLog(`Vote cast for ${party}`);
+            }, 1200);
+        }
+
+        // --- 3. VOICE REPORTING ---
+        function triggerVoiceReport() {
+            const btn = document.getElementById('mic');
+            btn.classList.add('active');
+            document.getElementById('mic-status').innerText = "Generating Speech...";
+
+            const report = new SpeechSynthesisUtterance();
+            report.text = "Hello. This is your Election Guide Intelligence report. NDA is currently leading in 293 seats, while the INDIA alliance is at 234 seats. Total turnout is 96.8 percent across all states.";
+            
+            report.onend = () => {
+                btn.classList.remove('active');
+                document.getElementById('mic-status').innerText = "Report Complete.";
+                addLog("Voice report played.");
+            };
+            window.speechSynthesis.speak(report);
+        }
+
+        // --- 4. MAP & LOGGING ---
+        const map = L.map('map').setView([19.8762, 75.3433], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        L.marker([19.8762, 75.3433]).addTo(map).bindPopup("Current Booth Region");
+
+        function addLog(msg) {
+            const feed = document.getElementById('log-feed');
+            feed.innerHTML = `<div>[${new Date().toLocaleTimeString()}] ${msg}</div>` + feed.innerHTML;
+        }
+
+        function showDemo(title, detail) {
+            alert(`${title}: ${detail}`);
+            addLog(`Consulted ${title}`);
+        }
+
+        function switchView(view) {
+            addLog(`Switched to ${view} view.`);
+        }
+    </script>
 </body>
 </html>
