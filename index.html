@@ -3,33 +3,623 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <meta name="description" content="Election Guide Pro - AI-powered election monitoring dashboard with real-time insights, EVM simulation, and interactive maps">
-    <meta name="theme-color" content="#020617">
-    <title>Election Guide Pro | Intelligent Election Monitoring</title>
+    <title>Election Guide Pro | Command Center</title>
     
-    <!-- Preconnect for performance -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://unpkg.com">
-    
-    <!-- External Styles & Scripts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: radial-gradient(circle at 20% 30%, #0a0f1f, #03060e);
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            color: #f0f3fa;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* custom scroll */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: #1e2538; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #00d2ff; border-radius: 10px; }
+
+        /* layout */
+        .app-layout {
+            display: flex;
+            height: 100vh;
+            width: 100%;
+            backdrop-filter: blur(2px);
+        }
+
+        /* sidebar premium */
+        .sidebar {
+            width: 280px;
+            background: rgba(8, 12, 24, 0.85);
+            backdrop-filter: blur(16px);
+            border-right: 1px solid rgba(0, 210, 255, 0.25);
+            padding: 1.6rem 1rem;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 12px 0 28px rgba(0,0,0,0.5);
+            z-index: 20;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 2rem;
+            padding-left: 8px;
+            border-left: 4px solid #00d2ff;
+        }
+        .flag-icon {
+            width: 28px;
+            height: 18px;
+            background: linear-gradient(135deg, #ff9933 0%, #ff9933 33%, #ffffff 33%, #ffffff 66%, #138808 66%, #138808 100%);
+            border-radius: 2px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        .logo-area h2 {
+            font-size: 1.35rem;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+            background: linear-gradient(135deg, #fff, #00d2ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 18px;
+            margin: 6px 0;
+            border-radius: 14px;
+            font-weight: 500;
+            color: #9aa4bf;
+            transition: all 0.25s ease;
+            cursor: pointer;
+        }
+        .nav-item i { width: 24px; font-size: 1.2rem; }
+        .nav-item.active, .nav-item:hover {
+            background: rgba(0, 210, 255, 0.12);
+            color: #00e0ff;
+            border-left: 3px solid #00d2ff;
+            transform: translateX(4px);
+        }
+
+        .insight-panel {
+            flex: 1;
+            margin: 28px 0 20px 0;
+            overflow-y: auto;
+        }
+        .insight-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 18px;
+            padding: 12px 14px;
+            margin-bottom: 12px;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .insight-card:hover {
+            border-color: #00d2ff;
+            background: rgba(0,210,255,0.05);
+        }
+        .insight-card i { margin-right: 8px; color: #00d2ff; }
+
+        /* main area */
+        .main-area {
+            flex: 1;
+            padding: 1.5rem 1.8rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* stats grid */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(4,1fr);
+            gap: 20px;
+        }
+        .stat-card {
+            background: rgba(12, 18, 32, 0.7);
+            backdrop-filter: blur(8px);
+            border-radius: 28px;
+            border: 1px solid rgba(0,210,255,0.2);
+            padding: 1rem 1.2rem;
+            transition: 0.2s;
+        }
+        .stat-number {
+            font-size: 2.1rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            background: linear-gradient(145deg, #fff, #9ad0ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .stat-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: #9aaec7;
+            letter-spacing: 1.5px;
+        }
+        .trend-up { color: #00ffaa; font-size: 0.75rem; margin-left: 6px; }
+
+        /* double column */
+        .double-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        /* cards */
+        .glass-card {
+            background: rgba(20, 28, 44, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 32px;
+            padding: 1.2rem 1.4rem;
+            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.4);
+        }
+
+        /* EVM design */
+        .evm-unit {
+            background: linear-gradient(145deg, #1e2a3a, #0f1722);
+            border-radius: 24px;
+            border: 1px solid #00d2ff40;
+            overflow: hidden;
+        }
+        .evm-header {
+            background: #0b101c;
+            padding: 12px;
+            text-align: center;
+            font-weight: 700;
+            border-bottom: 1px solid #00d2ff60;
+        }
+        .ballot-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #111a27;
+            margin: 12px;
+            padding: 12px 18px;
+            border-radius: 48px;
+            border: 1px solid #2a3748;
+            transition: all 0.2s;
+        }
+        .party-name {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .party-badge {
+            width: 32px;
+            height: 32px;
+            border-radius: 30px;
+            display: inline-block;
+        }
+        .badge1 { background: #ff4d4d; box-shadow: 0 0 5px red; }
+        .badge2 { background: #2d9cdb; }
+        .badge3 { background: #f2c94c; }
+        .vote-lamp {
+            width: 14px;
+            height: 14px;
+            background: #2e3b4e;
+            border-radius: 50%;
+            transition: 0.1s;
+        }
+        .btn-evm {
+            background: #1f2a3e;
+            border: 2px solid #3e556e;
+            width: 48px;
+            height: 48px;
+            border-radius: 60px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: 0.15s linear;
+            font-size: 1.2rem;
+        }
+        .btn-evm:active { transform: scale(0.94); background: #00d2ff; border-color: white; }
+        .lamp-glow { background: #ff3a3a !important; box-shadow: 0 0 12px red; }
+
+        #liveMap { height: 240px; border-radius: 20px; overflow: hidden; margin-top: 12px; border: 1px solid #00d2ff50; }
+
+        .mic-circle {
+            display: flex;
+            justify-content: center;
+            margin: 8px 0;
+        }
+        .mic-btn-large {
+            background: linear-gradient(145deg, #00b4db, #0083b0);
+            width: 80px;
+            height: 80px;
+            border-radius: 80px;
+            border: none;
+            font-size: 2.5rem;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 0 20px #00d2ff80;
+            transition: 0.2s;
+        }
+        .mic-btn-large.active {
+            animation: pulseMic 1.2s infinite;
+            background: #ff4757;
+            box-shadow: 0 0 30px #ff4757;
+        }
+        @keyframes pulseMic {
+            0% { transform: scale(1); opacity: 1;}
+            50% { transform: scale(1.07); opacity: 0.9;}
+            100% { transform: scale(1);}
+        }
+
+        .log-console {
+            background: #03060ecc;
+            border-radius: 28px;
+            padding: 12px 18px;
+            font-size: 0.7rem;
+            font-family: monospace;
+            border: 1px solid #2a3a55;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+        button {
+            background: none;
+            border: none;
+        }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        .voter-turnout-bar {
+            background: #00d2ff20;
+            border-radius: 10px;
+            height: 8px;
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        @media (max-width: 780px) {
+            .sidebar { width: 80px; padding: 12px; }
+            .sidebar .logo-area h2, .sidebar .nav-item span, .insight-card span { display: none; }
+            .nav-item i { font-size: 1.6rem; margin: 0 auto; }
+            .stat-number { font-size: 1.4rem; }
+        }
+    </style>
 </head>
 <body>
-    <div id="app">
-        <!-- Dynamic content will be rendered by JavaScript -->
-        <div class="loading-screen" id="loadingScreen">
-            <div class="loader"></div>
-            <p>Initializing Election Guide Pro...</p>
+<div class="app-layout">
+    <aside class="sidebar">
+        <div class="logo-area">
+            <div class="flag-icon"></div>
+            <h2>ElectionPro</h2>
         </div>
-    </div>
+        <nav>
+            <div class="nav-item active" data-view="dash" onclick="switchMainView('dash')">
+                <i class="fas fa-chart-line"></i> <span>Dashboard</span>
+            </div>
+            <div class="nav-item" data-view="evm" onclick="switchMainView('evm')">
+                <i class="fas fa-vote-yea"></i> <span>EVM Studio</span>
+            </div>
+            <div class="nav-item" data-view="geo" onclick="switchMainView('geo')">
+                <i class="fas fa-map-marked-alt"></i> <span>Constituency Map</span>
+            </div>
+        </nav>
 
-    <!-- External Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="app.js" type="module"></script>
+        <div class="insight-panel">
+            <p style="font-size: 10px; color:#5f7f9e; margin-bottom: 12px;"><i class="fas fa-microchip"></i> INTELLIGENCE HUB</p>
+            <div class="insight-card" onclick="quickInsight('Voter Turnout', '2024 Final Phase: 67.2% | Urban +9%')">
+                <i class="fas fa-chart-simple"></i> <span>📊 Turnout Analytics</span>
+            </div>
+            <div class="insight-card" onclick="quickInsight('Security Protocol', 'EVM gen-4 | end-to-end verifiable | VVPAT integrated')">
+                <i class="fas fa-shield-haltered"></i> <span>🔒 EVM Security</span>
+            </div>
+            <div class="insight-card" onclick="quickInsight('Swing Data', 'Maharashtra +12 seats swing to NDA | UP tight race')">
+                <i class="fas fa-chart-line"></i> <span>⚡ Swing Prediction</span>
+            </div>
+            <div class="insight-card" onclick="quickInsight('Candidate Demo', 'Mock voting simulation: Alpha, Beta, Gamma')">
+                <i class="fas fa-users"></i> <span>👥 Candidate Insight</span>
+            </div>
+        </div>
+        <div class="log-console" id="liveLogFeed">
+            <i class="fas fa-terminal"></i> System ready · Election Guide Pro
+        </div>
+    </aside>
+
+    <main class="main-area" id="mainContentArea">
+        <!-- Dashboard View (default) -->
+        <div id="view-dashboard" class="view-pane">
+            <div class="stat-grid">
+                <div class="stat-card"><span class="stat-number">543</span><div class="stat-label">TOTAL SEATS</div></div>
+                <div class="stat-card"><span class="stat-number" id="liveNDA">293</span><div class="stat-label">NDA Alliance <i class="fas fa-arrow-up trend-up"></i></div></div>
+                <div class="stat-card"><span class="stat-number" id="liveINDIA">234</span><div class="stat-label">INDIA Bloc</div></div>
+                <div class="stat-card"><span class="stat-number" id="liveOther">16</span><div class="stat-label">OTHERS / REGIONAL</div></div>
+            </div>
+            <div class="double-col">
+                <div class="glass-card">
+                    <div class="flex-between"><h4><i class="fas fa-chart-pie"></i> Coalition Projection</h4><span id="chartUpdateBadge" style="font-size:11px;">synced</span></div>
+                    <canvas id="seatChart" height="150" style="max-height: 210px; width:100%"></canvas>
+                    <div class="voter-turnout-bar"><div style="width: 78%; background:#00ffaa; height: 8px; border-radius: 8px;"></div></div>
+                    <div class="flex-between" style="margin-top: 8px;"><span>🗳️ Turnout: 78.4%</span><span>📊 194k booths covered</span></div>
+                </div>
+                <div class="glass-card">
+                    <h4><i class="fas fa-microphone-alt"></i> Voice Intelligence</h4>
+                    <div class="mic-circle">
+                        <button id="globalMicBtn" class="mic-btn-large" onclick="triggerDynamicSpeech()"><i class="fas fa-play-circle"></i></button>
+                    </div>
+                    <p id="voiceStatusText" style="font-size: 0.75rem; text-align:center; color:#88aaff">🔊 Tap to hear AI election briefing</p>
+                    <hr style="background:#2f3e5e; margin: 15px 0;">
+                    <div class="flex-between"><span>🎤 Commands demo: "show results", "vote alpha"</span><i class="fas fa-robot"></i></div>
+                </div>
+            </div>
+            <div class="glass-card" style="margin-top: 0px;">
+                <h4><i class="fas fa-chart-simple"></i> Recent Electoral Trends</h4>
+                <div id="trendMessage">📈 NDA gains in western states · INDIA holds southern strongholds</div>
+                <div style="display:flex; gap:16px; margin-top: 12px;">
+                    <span onclick="showDetailedTrend('swing')" style="background:#00d2ff20; padding:4px 16px; border-radius: 40px; cursor:pointer;">Swing states</span>
+                    <span onclick="showDetailedTrend('women')" style="background:#00d2ff20; padding:4px 16px; border-radius: 40px; cursor:pointer;">Women turnout +6%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- EVM View (hidden initially) -->
+        <div id="view-evm" class="view-pane" style="display: none;">
+            <div class="glass-card evm-unit">
+                <div class="evm-header"><i class="fas fa-microchip"></i> ELECTRONIC VOTING MACHINE (MOCK ELECTION)</div>
+                <div id="evmBallotsContainer">
+                    <div class="ballot-item">
+                        <div class="party-name"><span class="party-badge badge1"></span> NATIONAL ALLIANCE (ALPHA)</div>
+                        <div style="display:flex; gap:15px; align-items:center;"><div id="lampAlpha" class="vote-lamp"></div><button class="btn-evm" onclick="castSecureVote('ALPHA', 1)"><i class="fas fa-check"></i></button></div>
+                    </div>
+                    <div class="ballot-item">
+                        <div class="party-name"><span class="party-badge badge2"></span> PROGRESSIVE FRONT (BETA)</div>
+                        <div style="display:flex; gap:15px;"><div id="lampBeta" class="vote-lamp"></div><button class="btn-evm" onclick="castSecureVote('BETA', 2)"><i class="fas fa-check"></i></button></div>
+                    </div>
+                    <div class="ballot-item">
+                        <div class="party-name"><span class="party-badge badge3"></span> UNITED REFORM (GAMMA)</div>
+                        <div style="display:flex; gap:15px;"><div id="lampGamma" class="vote-lamp"></div><button class="btn-evm" onclick="castSecureVote('GAMMA', 3)"><i class="fas fa-check"></i></button></div>
+                    </div>
+                </div>
+                <div style="padding: 0 16px 16px 16px; text-align:center;">
+                    <button id="resetEVMVotes" style="background:#1f2a3e; padding: 8px 20px; border-radius: 40px; width:auto; color:white; border:1px solid #5d7a9a;" onclick="resetEVMCounter()"><i class="fas fa-sync-alt"></i> Reset Voting Simulation</button>
+                    <p style="font-size: 11px; margin-top: 10px;">⚡ Realistic beep + lamp indicator · each vote updates trends</p>
+                </div>
+            </div>
+            <div class="glass-card" style="margin-top: 20px;">
+                <h4><i class="fas fa-chart-line"></i> Live Voting Impact (Mock Poll)</h4>
+                <canvas id="evmImpactChart" height="80" style="max-height:150px"></canvas>
+                <div id="evmVotesCountDisplay" class="flex-between" style="margin-top: 10px;"><span>Alpha:0</span><span>Beta:0</span><span>Gamma:0</span></div>
+            </div>
+        </div>
+
+        <!-- Map View -->
+        <div id="view-geo" class="view-pane" style="display: none;">
+            <div class="glass-card">
+                <h4><i class="fas fa-map"></i> Constituency Watch · Live Booth Tracker</h4>
+                <div id="liveMap"></div>
+                <p style="margin-top: 12px; font-size: 0.8rem;"><i class="fas fa-location-dot"></i> <strong>Virtual booth: Aurangabad East</strong> – Real-time mock monitoring</p>
+            </div>
+            <div class="glass-card" style="margin-top: 20px;">
+                <h4>District Heat Index <i class="fas fa-fire-flame"></i></h4>
+                <div id="geoInfo">📍 Click on insight cards to see regional data. NDA leading in 210+ rural seats.</div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    // --------------------- GLOBAL STATES -------------------------
+    let chartInstance = null;
+    let evmVoteCount = { ALPHA: 0, BETA: 0, GAMMA: 0 };
+    let evmChart = null;
+
+    // current seat data
+    let seatData = { NDA: 293, INDIA: 234, OTHERS: 16 };
+
+    function updateDashboardNumbers() {
+        document.getElementById('liveNDA').innerText = seatData.NDA;
+        document.getElementById('liveINDIA').innerText = seatData.INDIA;
+        document.getElementById('liveOther').innerText = seatData.OTHERS;
+        if(chartInstance) {
+            chartInstance.data.datasets[0].data = [seatData.NDA, seatData.INDIA, seatData.OTHERS];
+            chartInstance.update();
+        }
+        addLogToFeed(`📊 Projection updated: NDA ${seatData.NDA} | INDIA ${seatData.INDIA} | OTHERS ${seatData.OTHERS}`);
+    }
+
+    // Chart init
+    function initMainChart() {
+        const ctx = document.getElementById('seatChart').getContext('2d');
+        chartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['NDA Alliance', 'INDIA Bloc', 'Others'],
+                datasets: [{ data: [seatData.NDA, seatData.INDIA, seatData.OTHERS], backgroundColor: ['#00d2ff', '#9b5de5', '#00ff9f'], borderWidth: 0, borderRadius: 10 }]
+            },
+            options: { cutout: '70%', responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom', labels: { color: '#ccddf8' } } } }
+        });
+    }
+
+    // EVM impact chart
+    function initEvmChart() {
+        const ctx = document.getElementById('evmImpactChart').getContext('2d');
+        if(evmChart) evmChart.destroy();
+        evmChart = new Chart(ctx, {
+            type: 'bar',
+            data: { labels: ['ALPHA', 'BETA', 'GAMMA'], datasets: [{ label: 'Mock Ballots', data: [evmVoteCount.ALPHA, evmVoteCount.BETA, evmVoteCount.GAMMA], backgroundColor: '#00d2ffcc', borderRadius: 8 }] },
+            options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { stepSize: 1, color: '#ccc' } } }, plugins: { legend: { labels: { color: '#aaa' } } } }
+        });
+        updateEvmTextDisplay();
+    }
+
+    function updateEvmTextDisplay() {
+        const disp = document.getElementById('evmVotesCountDisplay');
+        if(disp) disp.innerHTML = `<span>🔵 ALPHA: ${evmVoteCount.ALPHA}</span><span>🟢 BETA: ${evmVoteCount.BETA}</span><span>🟡 GAMMA: ${evmVoteCount.GAMMA}</span>`;
+        if(evmChart) {
+            evmChart.data.datasets[0].data = [evmVoteCount.ALPHA, evmVoteCount.BETA, evmVoteCount.GAMMA];
+            evmChart.update();
+        }
+        // also slightly adjust seat projection to simulate dynamic shift if votes high (just for fun)
+        let totalMock = evmVoteCount.ALPHA + evmVoteCount.BETA + evmVoteCount.GAMMA;
+        if(totalMock > 0 && totalMock % 7 === 0) {
+            seatData.NDA = Math.min(543, 293 + Math.floor(evmVoteCount.ALPHA / 3));
+            seatData.INDIA = Math.min(543, 234 + Math.floor(evmVoteCount.BETA / 3));
+            seatData.OTHERS = 543 - seatData.NDA - seatData.INDIA;
+            if(seatData.OTHERS < 0) seatData.OTHERS = 0;
+            updateDashboardNumbers();
+        }
+    }
+
+    // Secure vote with beep & lamp effect
+    function castSecureVote(party, lampId) {
+        let lampElement = null;
+        if(party === 'ALPHA') lampElement = document.getElementById('lampAlpha');
+        else if(party === 'BETA') lampElement = document.getElementById('lampBeta');
+        else lampElement = document.getElementById('lampGamma');
+        
+        if(lampElement) {
+            lampElement.classList.add('lamp-glow');
+            setTimeout(() => lampElement.classList.remove('lamp-glow'), 400);
+        }
+        // Beep using Web Audio
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.frequency.value = 880;
+            gain.gain.value = 0.3;
+            osc.start();
+            gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
+            osc.stop(audioCtx.currentTime + 0.5);
+        } catch(e) { console.log("audio not supported"); }
+        
+        evmVoteCount[party] += 1;
+        updateEvmTextDisplay();
+        addLogToFeed(`🗳️ VOTE CAST via EVM: ${party} party. Total mock ballots: ${evmVoteCount[party]}`);
+        // also trigger small seat dynamic reflection
+        let extraNDA = (party === 'ALPHA') ? 1 : (party === 'BETA') ? 0 : 0;
+        if(party === 'ALPHA') seatData.NDA = Math.min(543, seatData.NDA + 1);
+        if(party === 'BETA') seatData.INDIA = Math.min(543, seatData.INDIA + 1);
+        if(party === 'GAMMA') seatData.OTHERS = Math.min(543, seatData.OTHERS + 1);
+        let total = seatData.NDA + seatData.INDIA + seatData.OTHERS;
+        if(total > 543) {
+            if(party === 'ALPHA') seatData.NDA -= (total - 543);
+            else if(party === 'BETA') seatData.INDIA -= (total - 543);
+            else seatData.OTHERS -= (total - 543);
+        }
+        updateDashboardNumbers();
+    }
+
+    function resetEVMCounter() {
+        evmVoteCount = { ALPHA: 0, BETA: 0, GAMMA: 0 };
+        updateEvmTextDisplay();
+        addLogToFeed("🔄 EVM mock counter reset. All party votes cleared.");
+    }
+
+    // Voice Intelligence with dynamic reading
+    function triggerDynamicSpeech() {
+        const btn = document.getElementById('globalMicBtn');
+        btn.classList.add('active');
+        const statusSpan = document.getElementById('voiceStatusText');
+        statusSpan.innerText = "🎙️ Generating election briefing ...";
+        let msg = `Election Guide Pro Report. Current leads: NDA alliance at ${seatData.NDA} seats, INDIA bloc at ${seatData.INDIA} seats, others at ${seatData.OTHERS} seats. Voter turnout approximately 78.4 percent. EVM demo is active. You can cast test votes.`;
+        const utterance = new SpeechSynthesisUtterance(msg);
+        utterance.rate = 0.9;
+        utterance.onend = () => {
+            btn.classList.remove('active');
+            statusSpan.innerText = "✅ Briefing complete · Tap again";
+            addLogToFeed("🎤 Voice intelligence report delivered.");
+        };
+        utterance.onerror = () => {
+            btn.classList.remove('active');
+            statusSpan.innerText = "⚠️ Speech error, but system active";
+        };
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function quickInsight(title, detail) {
+        addLogToFeed(`ℹ️ Insight: ${title} — ${detail}`);
+        alert(`📌 ${title}\n\n${detail}`);
+    }
+
+    function showDetailedTrend(type) {
+        if(type === 'swing') addLogToFeed("📈 Swing analysis: Punjab +5 to Congress, UP +12 to NDA alliance");
+        else addLogToFeed("👩‍💼 Women turnout surge: +6.2% in urban constituencies");
+        alert("Trend data loaded:\n" + (type==='swing' ? "Maharashtra, Haryana show pro-incumbency wave" : "Female voter registration increased by 8% this election"));
+    }
+
+    function addLogToFeed(message) {
+        const logDiv = document.getElementById('liveLogFeed');
+        const time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+        const newEntry = document.createElement('div');
+        newEntry.innerHTML = `<span style="color:#00d2ff;">[${time}]</span> ${message}`;
+        logDiv.prepend(newEntry);
+        if(logDiv.children.length > 9) logDiv.removeChild(logDiv.lastChild);
+    }
+
+    function switchMainView(viewId) {
+        document.querySelectorAll('.view-pane').forEach(pane => pane.style.display = 'none');
+        if(viewId === 'dash') document.getElementById('view-dashboard').style.display = 'block';
+        else if(viewId === 'evm') document.getElementById('view-evm').style.display = 'block';
+        else if(viewId === 'geo') document.getElementById('view-geo').style.display = 'block';
+        
+        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+        document.querySelector(`.nav-item[data-view="${viewId}"]`).classList.add('active');
+        addLogToFeed(`🖥️ Switched to ${viewId.toUpperCase()} view`);
+        
+        if(viewId === 'geo' && !window.mapInitialized) {
+            const mapContainer = L.map('liveMap').setView([19.8762, 75.3433], 13);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>' }).addTo(mapContainer);
+            L.marker([19.8762, 75.3433]).addTo(mapContainer).bindPopup('<b>Election Command Booth</b><br>Mock polling station live');
+            window.mapInitialized = true;
+        } else if(viewId === 'geo' && window.mapInitialized) {
+            setTimeout(() => { if(window.mapInitialized) window.dispatchEvent(new Event('resize')); }, 100);
+        }
+        if(viewId === 'evm') initEvmChart();
+    }
+
+    // extra demo function to auto generate some mock votes for demo
+    function demoAutoSimulate() {
+        setInterval(() => {
+            let random = Math.floor(Math.random() * 3);
+            if(random === 0) castSecureVote('ALPHA',1);
+            else if(random === 1) castSecureVote('BETA',2);
+            else castSecureVote('GAMMA',3);
+            if(evmVoteCount.ALPHA + evmVoteCount.BETA + evmVoteCount.GAMMA > 15 && (Math.random()>0.7)) resetEVMCounter();
+        }, 9000);
+    }
+
+    window.onload = () => {
+        initMainChart();
+        initEvmChart();
+        updateDashboardNumbers();
+        addLogToFeed("✅ Election Guide Pro ready · Voice & EVM interactive");
+        demoAutoSimulate();   // dynamic demo voting every 9 sec for liveliness
+    };
+    
+    window.castSecureVote = castSecureVote;
+    window.resetEVMCounter = resetEVMCounter;
+    window.triggerDynamicSpeech = triggerDynamicSpeech;
+    window.switchMainView = switchMainView;
+    window.quickInsight = quickInsight;
+    window.showDetailedTrend = showDetailedTrend;
+</script>
 </body>
 </html>
