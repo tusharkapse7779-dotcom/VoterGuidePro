@@ -3,7 +3,7 @@
  * @version 1.0.0
  * @author Election Guide Team
  * @license MIT
- */
+ 
 
 // ============================================
 // Application State (Encapsulated)
@@ -740,4 +740,4 @@ class ElectionApp {
 document.addEventListener('DOMContentLoaded', () => {
     const app = new ElectionApp();
     app.init();
-});
+});*/
